@@ -1,0 +1,39 @@
+{
+	"files": [
+		{
+			"path": "Categories.php",
+			"bookmarks": [
+				{
+					"line": 21,
+					"column": 27,
+					"label": "Manage Page"
+				},
+				{
+					"line": 82,
+					"column": 43,
+					"label": "Add Page"
+				},
+				{
+					"line": 176,
+					"column": 37,
+					"label": "Insert Page"
+				},
+				{
+					"line": 238,
+					"column": 36,
+					"label": "Edit Page"
+				},
+				{
+					"line": 361,
+					"column": 37,
+					"label": "Update Page"
+				},
+				{
+					"line": 411,
+					"column": 37,
+					"label": "Delete Page"
+				}
+			]
+		}
+	]
+}
