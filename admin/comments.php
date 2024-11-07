@@ -60,26 +60,20 @@ if (isset($_SESSION['Username'])) {
                     <!-- LOOP -->
                     <?php
                     foreach ($comments as $comment) :
-                        echo '<tr>';
+                    echo '<tr>';
                         echo '<td>' . $comment["c_id"]   . '</td>';
                         echo '<td>' . $comment["comment"] . '</td>';
                         echo '<td>' . $comment["Item_Name"]    . '</td>';
                         echo '<td>' . $comment["Member"] . '</td>';
                         echo '<td>' . $comment["comment_date"]     .  '</td>';
-                        echo '<td>
-                                <a href="comments.php?do=Edit&comid=' . $comment["c_id"] . '" class="btn btn-success"><i class="fa fa-edit"></i> Edit</a>
-                                <a href="comments.php?do=Delete&comid=' . $comment["c_id"] . '" class="btn btn-danger confirm"><i class="fa fa-close"></i> Delete</a>';
-
+                        echo '<td class="btn-com">';
+                            echo '<a href="comments.php?do=Edit&comid=' . $comment["c_id"] . '" class="btn btn-success"><i class="fa fa-edit"></i> Edit</a>';
+                            echo '<a href="comments.php?do=Delete&comid=' . $comment["c_id"] . '" class="btn btn-danger confirm"><i class="fa fa-close"></i> Delete</a>';
                         if ($comment['status'] == 0) {
-
-                            echo '<a 
-                                    href="comments.php?do=Approve&comid=' . $comment["c_id"] . '" 
-                                    class="btn btn-info activate">
-                                    <i class="fa fa-check"></i> Approve</a>';
+                            echo '<a href="comments.php?do=Approve&comid=' . $comment["c_id"] . '" class="btn btn-info activate"><i class="fa fa-check"></i> Approve</a>';
                         }
-
-                        echo '</td>';
-                        echo '</tr>';
+                    echo '</td>';
+                    echo '</tr>';
                     endforeach;
                     ?>
                 </table>

@@ -29,7 +29,7 @@ if (isset($_SESSION['Username'])) {
             $sort = $_GET['sort']; // Choose Sort Type
         }
 
-        $stmt2 = $con->prepare("SELECT * FROM Categories ORDER BY Ordering $sort");
+        $stmt2 = $con->prepare("SELECT * FROM Categories WHERE parent = 0 ORDER BY Ordering $sort");
 
         $stmt2->execute();
 
@@ -60,7 +60,7 @@ if (isset($_SESSION['Username'])) {
                         echo "<div class='cat'>";
                             echo"<div class='hidden-buttons'>";
                                 echo "<a href='categories.php?do=Edit&catid=" . $cat["ID"] . "' class='btn btn-xs btn-primary'><i class='fa fa-edit'></i> Edit</a>";
-                                echo "<a href='categories.php?do=Delete&catid=" . $cat["ID"] . "' ' class='confirm btn btn-xs btn-danger'><i class='fa fa-close'></i> Delete</a>";
+                                echo "<a href='categories.php?do=Delete&catid=" . $cat["ID"] . "' class='confirm btn btn-xs btn-danger'><i class='fa fa-close'></i> Delete</a>";
                             echo "</div>";
                             echo "<h3>"   . $cat['Name'] . "</h3>";
                             echo "<div class='full-view'>";
@@ -70,7 +70,20 @@ if (isset($_SESSION['Username'])) {
                                 echo $cat['Visibility'] == 1 ? '<span class="visibility"><i class="fa fa-eye"></i> Hidden</span>' : 'Visb-ON';
                                 echo $cat['Allow_Comment'] == 1 ? '<span class="commenting"><i class="fa fa-close"></i> Comment Disabled</span>' : 'Comment-ON';
                                 echo $cat['Allow_Ads'] == 1 ? '<span class="advertises"><i class="fa fa-close"></i> Ads Disabled</span>' : 'Ads-ON';
-                            echo "</div>";
+                                // Get Child Categories
+                        $childCats = getAllFrom('*', 'categories', "WHERE parent = {$cat['ID']}" , '', 'ID', 'ASC');
+                        if ( !empty($childCats)) {
+                            foreach ($childCats as $c) {
+                                echo '<h4 class="child-head">Child Categories</h4>';
+                                echo "<ul class='list-unstyled child-cats'>";
+                                    echo "<li class='child-link'>
+                                        <a href='categories.php?do=Edit&catid=" . $c["ID"] . "'>". $c["Name"] ."</a>";
+                                echo    "<a href='categories.php?do=Delete&catid=" . $c["ID"] . "' class='show-delete confirm'> Delete</a>";
+                                    echo "  </li>
+                                    </ul>";
+                            }
+                        }
+                        echo "</div>";
                         echo "</div>";
                         echo "<hr />";
                     }
@@ -122,7 +135,22 @@ if (isset($_SESSION['Username'])) {
                     </div>
                 </div>
                 <!-- End Ordering Field -->
-
+                <!-- Start Category Type -->
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Parent ?</label>
+                    <div class="col-sm-10 col-md-6">
+                        <select name="parent" id="">
+                            <option value="0">None</option>
+                            <?php
+                                $allCats =getAllFrom('*', 'categories', 'WHERE parent = 0', NULL , 'ID');
+                                foreach ($allCats as $cat) {
+                                    echo "<option value='" . $cat['ID'] . "'>" . $cat['Name'] . "</option>";
+                                }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <!-- End Category Type -->
                 <!-- Start Visibility Field -->
                 <div class="form-group form-group-lg">
                     <label class="col-sm-2 control-label">Visible</label>
@@ -195,6 +223,7 @@ if (isset($_SESSION['Username'])) {
                 //^ This Data Come From input > name (input.name)
             $name        = $_POST['name'];
             $desc        = $_POST['description'];
+            $parent      = $_POST['parent'];
             $order       = $_POST['ordering'];
             $visible     = $_POST['visibility'];
             $comment     = $_POST['commenting'];
@@ -214,13 +243,14 @@ if (isset($_SESSION['Username'])) {
                     // Insert Category Info The Database
 
                     $stmt = $con->prepare("INSERT INTO 
-                                        Categories(Name, Description, Ordering, Visibility, Allow_Comment, Allow_Ads)
-                                        VALUES(:zname, :zdesc, :zorder, :zvisible, :zcomment, :zads) ");
+                                        Categories(Name, Description, parent ,Ordering, Visibility, Allow_Comment, Allow_Ads)
+                                        VALUES(:zname, :zdesc, :zparent,:zorder, :zvisible, :zcomment, :zads) ");
 
                     $stmt->execute(array(
 
                         'zname'     => $name,
                         'zdesc'     => $desc,
+                        'zparent'   => $parent,
                         'zorder'    => $order,
                         'zvisible'  => $visible,
                         'zcomment'  => $comment,
@@ -298,6 +328,28 @@ if (isset($_SESSION['Username'])) {
                     </div>
                 </div>
                 <!-- End Ordering Field -->
+
+                <!-- Start Category Type -->
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Parent ?</label>
+                    <div class="col-sm-10 col-md-6">
+                        <select name="parent" id="">
+                            <option value="0">None</option>
+                            <?php
+                                $allCats =getAllFrom('*', 'categories', 'WHERE parent = 0', NULL , 'ID');
+                                foreach ($allCats as $c) {
+                                    echo "<option value='". $c['ID'] ."'"; // Double Quote for see variable
+                                    if ( $cat['parent'] == $c['ID']) { echo "Selected"; }
+                                    echo ">" . $c['Name'] . "</option>";
+                                }
+                                echo <<<HTML
+                                <option value="1">$cat[ID]</option>
+                                HTML;
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <!-- End Category Type -->
 
                 <!-- Start Visibility Field -->
                 <div class="form-group form-group-lg">
@@ -382,6 +434,7 @@ if (isset($_SESSION['Username'])) {
             $name   = $_POST['name'];
             $desc   = $_POST['description'];
             $order  = $_POST['ordering'];
+            $parent  = $_POST['parent'];
 
             $visible   = $_POST['visibility'];
             $comment   = $_POST['commenting'];
@@ -392,13 +445,14 @@ if (isset($_SESSION['Username'])) {
                                         SET 
                                             `Name` = ?, 
                                             `Description` = ?, 
-                                            Ordering = ?, 
+                                            Ordering = ?,
+                                            parent = ?, 
                                             `Visibility` = ?, 
                                             `Allow_Comment` = ?, 
                                             `Allow_Ads` = ?
                                         WHERE ID = ?");
 
-                $stmt->execute(array($name, $desc, $order, $visible, $comment, $ads, $id));
+                $stmt->execute(array($name, $desc, $order, $parent, $visible, $comment, $ads, $id));
 
                 // Echo Success Message
             echo '<div class="container">';

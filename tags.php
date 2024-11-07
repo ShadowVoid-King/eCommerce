@@ -10,13 +10,17 @@ include 'init.php';
 ?>
 
 <div class="container">
-    <h1 class='text-center'>Show Category Items</h1>
     <div class="row">
     <?php 
-        $category = isset($_GET['pageid']) && is_numeric($_GET['pageid']) ? intval($_GET['pageid']) : 0; 
-        $allItems = getAllFrom("*" ,"items", "WHERE Cat_ID = {$category}", "AND Approve = 1", "Item_ID");
+    
+    if(isset($_GET['name'])) {
+        $tag = $_GET['name'];
+        echo "<h1 class='text-center'>$tag</h1>";
+        }
+        // %% wild card in SQL and deal like string '%$tag%'
+        $tagItems = getAllFrom("*" ,"items", "WHERE tags like '%$tag%'", "AND Approve = 1", "Item_ID");
         // getItems('Cat_ID', $_GET['pageid']);
-        foreach( $allItems as $item ){
+        foreach( $tagItems as $item ){
             echo '<div class="col-sm-6 col-md-3">';
                 echo '<div class="thumbnail item-box">';
                     echo '<span class="price-tag">$' . $item['Price'] . '</span>';

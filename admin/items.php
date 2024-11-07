@@ -166,10 +166,11 @@ if (isset($_SESSION['Username'])) {
                             <select name="members">
                                 <option value="0">...</option>
                                 <?php 
-                                    $stmt = $con->prepare("SELECT * FROM users ");
-                                    $stmt->execute();
-                                    $users = $stmt->fetchAll();
-                                    foreach ($users as $user) {
+                                $allMembers = getAllFrom('*', 'users', '', NULL , 'UserID');
+                        // $stmt = $con->prepare("SELECT * FROM users ");
+                        // $stmt->execute();
+                        // $users = $stmt->fetchAll();
+                                    foreach ($allMembers as $user) {
                                         echo "<option value='" . $user["UserID"] . "'>" . $user["Username"] . "</option>";
                                     }
                                 ?>
@@ -181,20 +182,34 @@ if (isset($_SESSION['Username'])) {
                     <div class="form-group form-group-lg">
                         <label class="col-sm-2 control-label">Category</label>
                         <div class="col-sm-10 col-md-6">
-                            <select name="categories">
+                        <select name="categories">
                                 <option value="0">...</option>
                                 <?php 
-                                    $stmt = $con->prepare("SELECT * FROM categories ");
-                                    $stmt->execute();
-                                    $cats = $stmt->fetchAll();
-                                    foreach ($cats as $cat) {
+                                    $allCats = getAllFrom('*', 'categories', 'WHERE parent = 0', NULL , 'ID');
+                            // $stmt = $con->prepare("SELECT * FROM categories ");
+                            // $stmt->execute();
+                            // $cats = $stmt->fetchAll();
+                                    foreach ($allCats as $cat) {
                                         echo "<option value='" . $cat["ID"] . "'>" . $cat["Name"] . "</option>";
+                                        $childCats = getAllFrom('*', 'categories', "WHERE parent = {$cat["ID"]}", NULL , 'ID');
+                                        foreach ( $childCats as $child) {
+                                            echo "<option value='" . $child["ID"] . "'>- - " . $child["Name"] . "</option>";
+                                        }
                                     }
                                 ?>
                             </select>
                         </div>
                     </div>
                     <!-- End Category Field -->
+                    <!-- Start Tags Field -->
+                    <div class="form-group form-group-lg">
+                        <label class="col-sm-2 control-label">Country</label>
+                        <div class="col-sm-10 col-md-6">
+                            <input type="text" name="tags" class="form-control" placeholder="Separate Tags With Comma (,)" />
+                        </div>
+                    </div>
+                    <!-- End Tags Field -->
+                    
 <!-- Start Rating Field -->
 <!-- <div class="form-group form-group-lg">
     <label class="col-sm-2 control-label">Rating</label>
@@ -239,6 +254,7 @@ if (isset($_SESSION['Username'])) {
             $status     = $_POST['status'];
             $member     = $_POST['members'];
             $cat        = $_POST['categories'];
+            $tags       = $_POST['tags'];
             
         
             // Validation Form (Server-Side)
@@ -277,8 +293,8 @@ if (isset($_SESSION['Username'])) {
                 // Insert User Info In The Database
                 
                 $stmt = $con->prepare("INSERT INTO 
-                                            items(`Name`, `Description`, Price, Country_Made, `Status`, Add_Date, Cat_ID, Member_ID)
-                                        VALUES(:zname, :zdesc, :zprice, :zcountry, :zstatus, now() , :zcat,:zmember) "); 
+                                            items(`Name`, `Description`, Price, Country_Made, `Status`, Add_Date, Cat_ID, Member_ID, tags)
+                                        VALUES(:zname, :zdesc, :zprice, :zcountry, :zstatus, now() , :zcat, :zmember, :ztags) "); 
                             // now() is mysql feature , add from admin panel so user should be approved
 
                 $stmt->execute(array(
@@ -289,7 +305,8 @@ if (isset($_SESSION['Username'])) {
                     'zcountry' => $country,
                     'zstatus'  => $status,
                     'zcat'      => $cat,
-                    'zmember'  => $member
+                    'zmember'  => $member,
+                    'ztags'    => $tags
                     
                 ));
 
@@ -297,7 +314,7 @@ if (isset($_SESSION['Username'])) {
                 $theMsg = "<div class='alert alert-success'>" . $stmt->rowCount() . " Record Inserted</div>";
                 redirectHome($theMsg, 'back');
 
-            endif; 
+            endif;
             }else{ // If Try Open Without Request Method
             echo '<div class="container">';
 
@@ -420,6 +437,16 @@ if (isset($_SESSION['Username'])) {
                 </div>
                 <!-- End Category Field -->
 
+                <!-- Start Tags Field -->
+                <div class="form-group form-group-lg">
+                        <label class="col-sm-2 control-label">Country</label>
+                        <div class="col-sm-10 col-md-6">
+                            <input type="text" name="tags" class="form-control" placeholder="Separate Tags With Comma (,)" 
+                            value="<?php echo $item['tags']; ?>"/>
+                        </div>
+                    </div>
+                    <!-- End Tags Field -->
+
                 <!-- Start Submit Field -->
                 <div class="form-group form-group-lg">
                     <div class="col-sm-offset-2 col-sm-10">
@@ -429,24 +456,24 @@ if (isset($_SESSION['Username'])) {
             </form>
                 <!-- End Submit Field -->
                 <!-- Start Comment -->
-                <?php
-                // Select All Comments Except Admin
-                $stmt = $con->prepare("SELECT 
-                                            comments.*, users.Username AS Member
-                                        FROM comments
-                                        INNER JOIN users ON
-                                        users.UserID = comments.user_id WHERE item_id = ?;
-                                        ");
+            <?php
+            // Select All Comments Except Admin
+            $stmt = $con->prepare("SELECT 
+                                        comments.*, users.Username AS Member
+                                    FROM comments
+                                    INNER JOIN users ON
+                                    users.UserID = comments.user_id WHERE item_id = ?;
+                                    ");
 
-                // Execute The Statement
-                $stmt->execute(array($itemid));
+            // Execute The Statement
+            $stmt->execute(array($itemid));
 
-                // Assign To Variable
-                $rows = $stmt->fetchAll();
-                
-                if (! empty($rows)) {
+            // Assign To Variable
+            $rows = $stmt->fetchAll();
+            
+            if (! empty($rows)) {
 
-        ?>
+            ?>
 
                 <h1 class="text-center">Manage [ <?php echo $item['Name']?> ] Comments</h1>
                     <div class="table-responsive">
@@ -516,6 +543,7 @@ if (isset($_SESSION['Username'])) {
             $status   = $_POST['status'];
             $cat      = $_POST['category'];
             $member   = $_POST['member'];
+            $tags     = $_POST['tags'];
 
             // Validation Form (Server-Side)
 
@@ -556,10 +584,10 @@ if (isset($_SESSION['Username'])) {
                 $stmt = $con->prepare("UPDATE 
                                             items 
                                         SET 
-                                            `Name` = ?, `Description` = ?, Price = ?, Country_Made = ?,`Status` = ?, Cat_ID = ?, Member_ID = ?
+                                            `Name` = ?, `Description` = ?, Price = ?, Country_Made = ?,`Status` = ?, Cat_ID = ?, Member_ID = ?, tags = ?
                                         WHERE Item_ID = ?");
 
-                $stmt->execute(array($name, $desc, $price, $country, $status, $cat, $member, $id));
+                $stmt->execute(array($name, $desc, $price, $country, $status, $cat, $member, $tags, $id));
 
                 // Echo Success Message
             echo '<div class="container">';

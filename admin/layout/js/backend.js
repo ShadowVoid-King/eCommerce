@@ -81,5 +81,15 @@ $(function () {
             $('.cat .full-view').fadeOut(200);
         }
     });
+    let show_delete = '.show-delete';
+    // Show Delete Button On Child Cats
+    $('.child-link').hover(
+        function () {
+        $(this).find('.show-delete').fadeIn(400);
+    }, function () {
+    // When Mouse Out Will Hide The Delete Button
+        $(this).find('.show-delete').fadeOut(400);
+    });
 
+    
 });

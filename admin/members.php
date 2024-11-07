@@ -47,9 +47,10 @@ if (isset($_SESSION['Username'])){
         <h1 class="text-center">Manage Members</h1>
         <div class="container">
             <div class="table-responsive">
-                <table class="main-table text-center table table-bordered">
+                <table class="main-table manage-members text-center table table-bordered">
                     <tr>
                         <td>#ID</td>
+                        <td>Avatar</td>
                         <td>Username</td>
                         <td>Email</td>
                         <td>Full Name</td>
@@ -61,6 +62,12 @@ if (isset($_SESSION['Username'])){
                         foreach ($rows as $row) :
                             echo '<tr>';
                             echo '<td>' . $row["UserID"]   . '</td>';
+                            if ( empty($row["avatar"]) ) {
+                                $srcImg = "default.png";
+                            }else {
+                                $srcImg = $row["avatar"];
+                            }
+                            echo "<td><img src='uploads/avatars/$srcImg' alt='' /></td>";
                             echo '<td>' . $row["Username"] . '</td>';
                             echo '<td>' . $row["Email"]    . '</td>';
                             echo '<td>' . $row["FullName"] . '</td>';
@@ -98,7 +105,8 @@ if (isset($_SESSION['Username'])){
             
             <h1 class="text-center">Add New Member</h1>
             <div class="container">
-                <form class="form-horizontal" action="?do=Insert" method="POST">
+                <!-- enctype="multipart/form-data" means that the form will be able to send files and not just text -->
+                <form class="form-horizontal" action="?do=Insert" method="POST" enctype="multipart/form-data">
                     <!-- <input type="hidden" name="userid" value="<?php #echo $userid; ?>"> You Don't Need userId Because You Gone To Make one and Database Will Create it Auto--> 
                         <!-- There is no need for value -->
                     <!-- Start Username Field -->
@@ -139,6 +147,15 @@ if (isset($_SESSION['Username'])){
                     </div>
                     <!-- End Full Name Field -->
                     
+                    <!-- Start Avatar Field -->
+                    <div class="form-group form-group-lg">
+                        <label class="col-sm-2 control-label">User Avatar</label>
+                        <div class="col-sm-10 col-md-6">
+                            <input type="file" name="avatar" class="form-control" required="required" />
+                        </div>
+                    </div>
+                    <!-- End Avatar Field -->
+                    
                     <!-- Start Submit Field -->
                     <div class="form-group form-group-lg">
                         <div class="col-sm-offset-2 col-sm-10">
@@ -158,6 +175,30 @@ if (isset($_SESSION['Username'])){
             echo '<h1 class="text-center">Update Member</h1>';
             
             echo "<div class='container'>"; // Start Container
+
+            // Upload Files
+            $avatarFile = $_FILES['avatar'];
+            // print_r($avatar);
+            $avatarName = $avatarFile['name'];
+            $avatarSize = $avatarFile['size'];
+            $avatarTmp  = $avatarFile['tmp_name'];
+            $avatarType = $avatarFile['type'];
+
+            $avatarSizeLimit = 4 * 1024**2; // 4,194,304 Bytes = 4MB
+
+            // List Of Allowed File Type To Upload
+            $avatarAllowedExtension = array("jpeg", "jpg", "png", "gif");
+
+            // Get Avatar Extension
+            //! Only variables should be passed by reference 
+            /* 
+            *This error occurs when you try to pass the result of an expression directly to a function that expects a variable passed by reference. 
+            *In your specific case, end() expects an array as a reference.
+            */
+            // Work Also
+            // $avatarParts = Explode('.', $avatarName);
+            // $avatarExtension = strtolower( end($avatarParts) );
+            $avatarExtension = strtolower(pathinfo($avatarName, PATHINFO_EXTENSION)); // Work Also
 
             // Get Variables From The Form
                 //^ This Data Come From input > name (input.name)
@@ -190,6 +231,15 @@ if (isset($_SESSION['Username'])){
             if (empty($name)) {
                 $formErrors[] = "Full Name Can't Be <strong>Empty</strong>";
             }
+            if (! empty($avatarName) && ! in_array($avatarExtension, $avatarAllowedExtension)) {
+                $formErrors[] = "This Extension Is Not <strong>Allowed</strong>";
+            }
+            if ( empty($avatarName)) {
+                $formErrors[] = "Avatar Is <strong>Required</strong>";
+            }
+            if ( $avatarSize > $avatarSizeLimit) {
+                $formErrors[] = "Avatar Can't Be Large Than <strong>4MB</strong>";
+            }
             // Loop Into Errors Array And Echo It
             foreach($formErrors as $error):
                 echo "<div class='alert alert-danger'>" . $error . "</div>";
@@ -197,40 +247,45 @@ if (isset($_SESSION['Username'])){
 
             // Check If There's No Error Proceed The Update Operation
 
-            if (empty($formErrors)):
+            if (empty($formErrors)){
 
-                $stmt2 = $con->prepare("SELECT
-                                            *
-                                        FROM
-                                            Users
-                                        WHERE 
-                                            Username = ?
-                                        AND
-                                            UserId != ?
-                                            ");
-                
-                $stmt2->execute(array($user, $id));
-                $count = $stmt2->rowCount();
-                // If Member Exist And His ID Not ItSelf So It Look Only On Username
-                if ( $count == 1) {
-                    echo "<div class='alert alert-danger'>Sorry, This User Is Exist</div>";
+// $stmt2 = $con->prepare("SELECT
+//                             *
+//                         FROM
+//                             Users
+//                         WHERE 
+//                             Username = ?
+//                         AND
+//                             UserId != ?
+//                             ");
+
+// $stmt2->execute(array($user, $id));
+// $count = $stmt2->rowCount();
+// // If Member Exist And His ID Not ItSelf So It Look Only On Username
+// if ( $count == 1) {
+//     echo "<div class='alert alert-danger'>Sorry, This User Is Exist</div>";
+//     redirectHome($theMsg, 'back');
+// } else {
+
+                $avatar = rand(0, 100000) . "_" . $avatarName;
+                move_uploaded_file($avatarTmp, "uploads\avatars\\" . $avatar); // move tmp file , destination folder + name it by $avatar
+
+
+                // Check If User Exist in Database
+                                // Select    , Table , Value|Point Of Search
+                $check = checkItem("Username", "users", $user);
+                if ( $check == 1) {
+                    
+                    $theMsg = "<div class='alert alert-danger'>Sorry, This User Is Exist</div>";
                     redirectHome($theMsg, 'back');
-                } else {
-                        // Check If User Exist in Database
-                                        // Select    , Table , Value|Point Of Search
-                        $check = checkItem("Username", "users", $user);
-                        if ( $check == 1) {
-                            
-                            $theMsg = "<div class='alert alert-danger'>Sorry, This User Is Exist</div>";
-                            redirectHome($theMsg, 'back');
-                    }
-            }else:
+    // }
+    }
 
                     // Insert User Info In The Database
                     
                     $stmt = $con->prepare("INSERT INTO 
-                                                users(Username, `Password`, Email, FullName, RegStatus, Date)
-                                            VALUES(:zuser, :zpass, :zmail, :zname, 1, now()) "); 
+                                                users(Username, `Password`, Email, FullName, RegStatus, `Date`, avatar)
+                                            VALUES(:zuser, :zpass, :zmail, :zname, 1, now(), :zavatar) "); 
                                 // now() is mysql feature , add from admin panel so user should be approved
 
                     $stmt->execute(array(
@@ -238,14 +293,15 @@ if (isset($_SESSION['Username'])){
                         'zuser' => $user,
                         'zpass' => $hashPass,
                         'zmail' => $email,
-                        'zname' => $name
+                        'zname' => $name,
+                        'zavatar'=> $avatar
                         
                     ));
 
                     // Echo Success Message
                     $theMsg = "<div class='alert alert-success'>" . $stmt->rowCount() . " Record Inserted</div>";
                     redirectHome($theMsg, 'back');
-            endif; 
+                }
             }else{ // If Try Open Without Request Method
             echo '<div class="container">';
                 $theMsg = "<div class='alert alert-danger'>Sorry, You Can't Browser This Page Directory</div>";
@@ -480,9 +536,11 @@ if (isset($_SESSION['Username'])){
         }
         echo "</div>";  //* End Container
     }                                                                                       //~ End Activate Page
-        include $tpl . 'footer.php'; //! Error Make Dropdown Not Work Because Need Js For Event
+    include $tpl . 'footer.php'; //! Error Make Dropdown Not Work Because Need Js For Event
+
     }else{ // If Not Sign-In 
         header('Location: index.php');
         exit(); // Or die();
     }                                       //* Close isset Username
+    ob_end_flush();
 ?>

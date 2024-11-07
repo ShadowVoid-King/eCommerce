@@ -42,4 +42,20 @@ $(function () {
         
     });
 
+    // Function Live Name Work Fine
+    /*
+    function $liveName(live, livePath, dollar = '') {
+        $(live).keyup(function () {
+            $(livePath).text( dollar + $(this).val());
+        });
+    }
+    $liveName('.live-name', '.live-preview .caption h3');
+    $liveName('.live-desc', '.live-preview .caption p');
+    $liveName('.live-price', '.live-preview .price-tag', '$');
+    */
+    // Elzero Way By Data Custom
+    $('.live').keyup(function () {
+          // This is selector of data-class live-name live-desc or live-price
+        $($(this).data('class')).text($(this).val());
+    });
 });

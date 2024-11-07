@@ -1,6 +1,26 @@
 <?php
 
 /* 
+* Ultimate Function
+** Get All Function v3.0 
+** Function To Get All Records From Any Database
+*/
+// Deprecated: Optional parameter $where declared before required parameter $orderField is implicitly treated as a required parameter
+function getAllFrom($field, $table, $where = NULL, $and = NULL , $orderField = NULL , $ordering = "DESC") {
+    global $con;
+    
+// $sql = $where == NULL ? '' : $where;
+
+    $getAll = $con->prepare("SELECT $field FROM $table $where $and ORDER BY $orderField $ordering");
+
+    $getAll->execute();
+
+    $all = $getAll->fetchAll();
+
+    return $all;
+}
+
+/* 
     ** getTitle v1.0
     ** Title Function That Echo The Page Title in Case The Page
     ** Has The Variable $pageTitle And Echo Default Title For Other Pages

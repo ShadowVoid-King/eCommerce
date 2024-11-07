@@ -1,7 +1,28 @@
 <?php
 
 /* 
-** Get Categories Function v2.0
+* Ultimate Function
+** Get All Function v3.0 
+** Function To Get All Records From Any Database
+*/
+// Deprecated: Optional parameter $where declared before required parameter $orderField is implicitly treated as a required parameter
+function getAllFrom($field, $table, $where = NULL, $and = NULL , $orderField = NULL , $ordering = "DESC") {
+    global $con;
+    
+// $sql = $where == NULL ? '' : $where;
+
+    $getAll = $con->prepare("SELECT $field FROM $table $where $and ORDER BY $orderField $ordering");
+
+    $getAll->execute();
+
+    $all = $getAll->fetchAll();
+
+    return $all;
+}
+
+
+/* 
+** Get Categories Function v1.0
 ** Function To Get Categories From Database
 */
 
@@ -18,16 +39,18 @@ function getCat() {
 }
 
 /* 
-** Get Items Function v2.0
-** Function To Get Items From Database
+** Get Ad Items Function v1.0
+** Function To Get Ad Items From Database
 */
-
-function getItems($CatID) {
+//* Deprecated By Ultimate Function
+function getItems($where, $value, $approve = NULL) {
     global $con;
 
-    $getItems = $con->prepare("SELECT * FROM items WHERE Cat_ID = ? ORDER BY Item_ID DESC");
+    $sql = $approve == NULL ? 'AND Approve = 1' : NULL;
+    
+    $getItems = $con->prepare("SELECT * FROM items WHERE $where = ? $sql ORDER BY Item_ID DESC");
 
-    $getItems->execute(array($CatID));
+    $getItems->execute(array($value));
 
     $items = $getItems->fetchAll();
 

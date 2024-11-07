@@ -19,15 +19,29 @@
     <div class="upper-bar">
         <div class="container">
             <?php 
-                if (isset($_SESSION['user'])) {
-                    echo 'Welcome ' . $sessionUser . ' ';
-                    echo '<a href="profile.php">My Profile</a>';
-                    echo ' - <a href="logout.php">Logout</a>';
+            if (isset($_SESSION['user'])) { ?>
+            <img class="my-image img-thumbnail img-circle" src="img.png" alt=""/>
+            <div class="btn-group my-info">
+                <span class="btn dropdown-toggle" data-toggle="dropdown"><?php echo $sessionUser; ?>
+                <span class="caret"></span>
+                </span>
+                <ul class="dropdown-menu">
+                    <li><a href="profile.php">My Profile</a></li>
+                    <li><a href="newad.php">New Item</a></li>
+                    <li><a href="profile.php#my-ads">My Item</a></li>
+                    <li><a href="logout.php">Logout</a></li>
+                </ul>
+            </div>
+            <?php
+// echo 'Welcome ' . $sessionUser . ' ';
+// echo '<a href="profile.php">My Profile</a>';
+// echo ' - <a href="newad.php">New Item</a>';
+// echo ' - <a href="logout.php">Logout</a>';
 
-                    $userStatus = checkUserStatus($sessionUser);
-                    if ($userStatus == 1) {
-                        // User Is Not Activated , Also Can used for banned pages for users
-                    }
+// $userStatus = checkUserStatus($sessionUser);
+// if ($userStatus == 1) {
+//     // User Is Not Activated , Also Can used for banned pages for users
+// }
                 }else {
             ?>
             <a href="login.php">
@@ -55,13 +69,14 @@
                     <?php 
                     // only one page [categories] and and id page will show there *No Needed To Create Each One
                     //Str_replace Will Replace Space By - So It Can Readable
-                    foreach (getCat() as $cat) {
+                    $allCats = getAllFrom('*', 'categories', 'WHERE parent = 0' , '', 'ID', 'ASC');
+                    foreach ($allCats as $cat) {
                         echo "<li>
-                            <a href='categories.php?pageid=" . $cat["ID"] . "&pagename=" . str_replace(' ', '-', $cat["Name"]) . "'>" 
+                            <a href='categories.php?pageid=" . $cat["ID"] . "'>" 
                             . $cat["Name"] . "
                             </a>
                         </li>"; 
-                    }
+                    };
                     ?>
                 </ul>
             </div>

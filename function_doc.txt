@@ -1,0 +1,5 @@
+=======================
+== Function Document ==
+=======================
+
+function getAllFrom($field, $tableName, $where = NULL, $orderField , $ordering = "DESC")
